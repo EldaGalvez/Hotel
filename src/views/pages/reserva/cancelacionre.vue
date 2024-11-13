@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 // Definir la estructura de cancelación
 const cancelacion = ref({
@@ -39,14 +39,16 @@ const validarRFC = (rfc) => {
 const buscarClientePorRFC = async () => {
     if (cancelacion.value.rfcCliente.length === 13) {
         try {
-            // Aquí llamamos a la API para obtener el cliente por RFC
-            // Reemplaza la URL con la de tu API que reciba el RFC y retorne el cliente
             const response = await fetch(`http://localhost:8080/api/cliente/${cancelacion.value.rfcCliente}`);
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+
             const cliente = await response.json();
 
             if (cliente) {
                 cancelacion.value.idCliente = cliente.idCliente;
-                cancelacion.value.nombreCliente = cliente.nombre; // Si quieres llenar también el nombre
+                cancelacion.value.nombreCliente = cliente.nombre;
             } else {
                 alert('Cliente no encontrado. Verifica el RFC.');
             }
@@ -84,7 +86,7 @@ watch(() => cancelacion.value.rfcCliente, buscarClientePorRFC);
                         <InputText id="rfcCliente" type="text" v-model="cancelacion.rfcCliente" class="w-full" required />
                     </div>
                 </div>
-                <Button label="Registrar" @click="registerCancelacion" class="mt-4 register-button">
+                <Button label="Registrar" @click="registerCancelacion" class="mt-4 p-button-secondary register-button">
                     Registrar
                 </Button>
             </div>
@@ -108,9 +110,15 @@ label, input {
     background-color: cornflowerblue;
     color: white;
     font-weight: bold;
-    padding: 10px 20px;
+    padding: 10px 20px; /* Tamaño original de padding */
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    width: 150px; /* Ancho fijo para hacer el botón más pequeño de largo */
+    text-align: center;
+}
+
+.register-button:active {
+    background-color: #377dff;
 }
 </style>
