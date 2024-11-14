@@ -6,13 +6,15 @@ const estancias = ref([]);
 const serviciosDisponibles = ref(['Taxi', 'Lavandería', 'Room Service']);
 const searchQuery = ref('');
 const estanciaEdit = ref({
-  id: '',
-  nombreCliente: '',
-  numeroHabitacion: '',
-  fechaLlegada: '',
-  horaLlegada: '',
-  serviciosConsumidos: [],
-  diasEstancia: 0
+  id_estancia: '',
+  id_cliente: '',
+  id_reserva: '',
+  fecha_llegada: '',
+  hora_llegada: '',
+  fecha_salida: '',
+  hora_salida: '',
+  dias: 0,
+  serviciosConsumidos: []
 });
 const showModal = ref(false);
 
@@ -32,12 +34,12 @@ const filteredEstancias = computed(() => {
     return estancias.value;
   }
   return estancias.value.filter(estancia =>
-    estancia.id.toString().includes(searchQuery.value) ||
-    estancia.nombreCliente.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    estancia.numeroHabitacion.includes(searchQuery.value) ||
-    estancia.fechaLlegada.includes(searchQuery.value) ||
-    estancia.horaLlegada.includes(searchQuery.value) ||
-    estancia.diasEstancia.toString().includes(searchQuery.value)
+    estancia.id_estancia.toString().includes(searchQuery.value) ||
+    estancia.id_cliente.toString().includes(searchQuery.value) ||
+    estancia.id_reserva.toString().includes(searchQuery.value) ||
+    estancia.fecha_llegada.includes(searchQuery.value) ||
+    estancia.hora_llegada.includes(searchQuery.value) ||
+    estancia.dias.toString().includes(searchQuery.value)
   );
 });
 
@@ -54,9 +56,9 @@ const modificarEstancia = (index) => {
 // Guardar los cambios en la estancia
 const guardarEstancia = async () => {
   try {
-    if (estanciaEdit.value.id) {
+    if (estanciaEdit.value.id_estancia) {
       // Enviar los datos modificados a la API
-      await axios.put(`http://localhost:8080/api/estancias/${estanciaEdit.value.id}`, estanciaEdit.value); // ------------------------------------ API ---------------------------------------
+      await axios.put(`http://localhost:8080/api/estancias/${estanciaEdit.value.id_estancia}`, estanciaEdit.value); // ------------------------------------ API ---------------------------------------
     } else {
       // Crear una nueva estancia
       await axios.post('API', estanciaEdit.value); // ------------------------------------ API ---------------------------------------
@@ -70,13 +72,15 @@ const guardarEstancia = async () => {
 // Cancelar la edición
 const cancelarEdicion = () => {
   estanciaEdit.value = {
-    id: '',
-    nombreCliente: '',
-    numeroHabitacion: '',
-    fechaLlegada: '',
-    horaLlegada: '',
-    serviciosConsumidos: [],
-    diasEstancia: 0
+    id_estancia: '',
+    id_cliente: '',
+    id_reserva: '',
+    fecha_llegada: '',
+    hora_llegada: '',
+    fecha_salida: '',
+    hora_salida: '',
+    dias: 0,
+    serviciosConsumidos: []
   };
   showModal.value = false;
 };
@@ -97,27 +101,31 @@ onMounted(() => {
         <thead>
           <tr>
             <th class="px-4 py-2">ID Estancia</th>
-            <th class="px-4 py-2">Cliente</th>
-            <th class="px-4 py-2">Número de Habitación</th>
+            <th class="px-4 py-2">ID Cliente</th>
+            <th class="px-4 py-2">ID Reserva</th>
             <th class="px-4 py-2">Fecha Llegada</th>
             <th class="px-4 py-2">Hora Llegada</th>
+            <th class="px-4 py-2">Fecha Salida</th>
+            <th class="px-4 py-2">Hora Salida</th>
+            <th class="px-4 py-2">Días</th>
             <th class="px-4 py-2">Servicios Consumidos</th>
-            <th class="px-4 py-2">Días Estancia</th>
             <th class="px-4 py-2">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="filteredEstancias.length === 0">
-            <td class="border px-4 py-2 text-center" colspan="8">No hay estancias disponibles.</td>
+            <td class="border px-4 py-2 text-center" colspan="10">No hay estancias disponibles.</td>
           </tr>
-          <tr v-for="(estancia, index) in filteredEstancias" :key="estancia.id">
-            <td class="border px-4 py-2">{{ estancia.id }}</td>
-            <td class="border px-4 py-2">{{ estancia.nombreCliente }}</td>
-            <td class="border px-4 py-2">{{ estancia.numeroHabitacion }}</td>
-            <td class="border px-4 py-2">{{ estancia.fechaLlegada }}</td>
-            <td class="border px-4 py-2">{{ estancia.horaLlegada }}</td>
+          <tr v-for="(estancia, index) in filteredEstancias" :key="estancia.id_estancia">
+            <td class="border px-4 py-2">{{ estancia.id_estancia }}</td>
+            <td class="border px-4 py-2">{{ estancia.id_cliente }}</td>
+            <td class="border px-4 py-2">{{ estancia.id_reserva }}</td>
+            <td class="border px-4 py-2">{{ estancia.fecha_llegada }}</td>
+            <td class="border px-4 py-2">{{ estancia.hora_llegada }}</td>
+            <td class="border px-4 py-2">{{ estancia.fecha_salida }}</td>
+            <td class="border px-4 py-2">{{ estancia.hora_salida }}</td>
+            <td class="border px-4 py-2">{{ estancia.dias }}</td>
             <td class="border px-4 py-2">{{ estancia.serviciosConsumidos.join(', ') }}</td>
-            <td class="border px-4 py-2">{{ estancia.diasEstancia }}</td>
             <td class="border px-4 py-2 flex gap-2">
               <Button icon="pi pi-pencil" @click="modificarEstancia(index)" class="p-button-warning"></Button>
             </td>
@@ -132,15 +140,21 @@ onMounted(() => {
         <div class="font-semibold text-xl">Modificar Estancia</div>
         <div class="flex flex-col gap-1 mt-4">
           <label>ID Estancia</label>
-          <input type="text" v-model="estanciaEdit.id" class="p-1 border border-gray-300 rounded" readonly/>
-          <label>Cliente</label>
-          <input type="text" v-model="estanciaEdit.nombreCliente" class="p-1 border border-gray-300 rounded" readonly/>
-          <label>Número de Habitación</label>
-          <input type="text" v-model="estanciaEdit.numeroHabitacion" class="p-1 border border-gray-300 rounded" readonly/>
+          <input type="text" v-model="estanciaEdit.id_estancia" class="p-1 border border-gray-300 rounded" readonly/>
+          <label>ID Cliente</label>
+          <input type="text" v-model="estanciaEdit.id_cliente" class="p-1 border border-gray-300 rounded" readonly/>
+          <label>ID Reserva</label>
+          <input type="text" v-model="estanciaEdit.id_reserva" class="p-1 border border-gray-300 rounded" readonly/>
           <label>Fecha de Llegada</label>
-          <input type="date" v-model="estanciaEdit.fechaLlegada" class="p-1 border border-gray-300 rounded"/>
+          <input type="date" v-model="estanciaEdit.fecha_llegada" class="p-1 border border-gray-300 rounded"/>
           <label>Hora de Llegada</label>
-          <input type="time" v-model="estanciaEdit.horaLlegada" class="p-1 border border-gray-300 rounded"/>
+          <input type="time" v-model="estanciaEdit.hora_llegada" class="p-1 border border-gray-300 rounded"/>
+          <label>Fecha de Salida</label>
+          <input type="date" v-model="estanciaEdit.fecha_salida" class="p-1 border border-gray-300 rounded"/>
+          <label>Hora de Salida</label>
+          <input type="time" v-model="estanciaEdit.hora_salida" class="p-1 border border-gray-300 rounded"/>
+          <label>Días de Estancia</label>
+          <input type="number" v-model="estanciaEdit.dias" class="p-1 border border-gray-300 rounded"/>
           <label>Servicios Consumidos</label>
           <div class="flex flex-col">
             <div v-for="(servicio, index) in serviciosDisponibles" :key="index">
@@ -153,8 +167,6 @@ onMounted(() => {
               <label :for="servicio">{{ servicio }}</label>
             </div>
           </div>
-          <label>Días de Estancia</label>
-          <input type="number" v-model="estanciaEdit.diasEstancia" class="p-1 border border-gray-300 rounded"/>
           <div class="flex justify-end gap-1 mt-2">
             <Button label="Guardar" @click="guardarEstancia" class="p-button" :style="{ backgroundColor: 'cornflowerblue', borderColor: 'cornflowerblue' }"></Button>
             <Button label="Cancelar" @click="cancelarEdicion" class="p-button" :style="{ backgroundColor: 'red', borderColor: 'red' }"></Button>

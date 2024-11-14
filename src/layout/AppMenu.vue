@@ -103,7 +103,11 @@ const model = ref([
                         icon: 'pi pi-fw pi-sign-in',
                         to: '/reportes/cancelaciones'
                     },
-                    
+                    {
+                        label: 'Habitaciones',
+                        icon: 'pi pi-fw pi-sign-in',
+                        to: '/reportes/habitaciones'
+                    },
                     {
                         label: 'Ingresos',
                         icon: 'pi pi-fw pi-sign-in',

@@ -1,7 +1,28 @@
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
-const cancelaciones = ref([]); // Lista vacía de cancelaciones
+// Lista vacía de cancelaciones
+const cancelaciones = ref([]);
+
+// Función para obtener las cancelaciones desde la API
+const obtenerCancelaciones = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/cancelaciones'); // ---------------------- API --------------------------
+    if (!response.ok) {
+      throw new Error('Error al obtener las cancelaciones');
+    }
+
+    // Asumimos que la API devuelve un array de objetos con los campos esperados
+    cancelaciones.value = await response.json();
+  } catch (error) {
+    console.error('Hubo un error al obtener las cancelaciones:', error);
+  }
+};
+
+// Obtener las cancelaciones cuando el componente se monta
+onMounted(() => {
+  obtenerCancelaciones();
+});
 </script>
 
 <template>
@@ -20,13 +41,18 @@ const cancelaciones = ref([]); // Lista vacía de cancelaciones
                     </tr>
                 </thead>
                 <tbody>
+                    <!-- Si no hay cancelaciones, muestra un mensaje -->
+                    <tr v-if="cancelaciones.length === 0">
+                        <td colspan="6" class="text-center py-4">No hay cancelaciones registradas</td>
+                    </tr>
+                    <!-- Si hay cancelaciones, muestra los datos en las filas -->
                     <tr v-for="(cancelacion, index) in cancelaciones" :key="index">
-                        <td class="border px-4 py-2">{{ cancelacion.idCancelacion }}</td>
-                        <td class="border px-4 py-2">{{ cancelacion.fechaCancelacion }}</td>
-                        <td class="border px-4 py-2">{{ cancelacion.horaCancelacion }}</td>
-                        <td class="border px-4 py-2">{{ cancelacion.nombreCliente }}</td>
-                        <td class="border px-4 py-2">{{ cancelacion.apellidoPaternoCliente }}</td>
-                        <td class="border px-4 py-2">{{ cancelacion.apellidoMaternoCliente }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.id_cancelacion }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.fecha_can }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.hora_can }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.nombre_cliente }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.ap_pat_cliente }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.ap_mat_cliente }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -56,5 +82,4 @@ th {
     background-color: #f2f2f2;
     font-weight: bold;
 }
-
 </style>

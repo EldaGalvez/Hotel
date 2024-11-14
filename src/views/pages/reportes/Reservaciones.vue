@@ -1,11 +1,27 @@
 <script setup>
-import { computed, ref } from 'vue';
+import axios from 'axios'; // Asegúrate de tener Axios instalado
+import { computed, onMounted, ref } from 'vue';
 
 const reservaciones = ref([]); // Lista vacía de reservaciones
 
+const cargarReservaciones = async () => {
+    try {
+        const respuesta = await axios.get('reservaciones'); //----------API---------------
+        reservaciones.value = respuesta.data; // Asigna la respuesta de la API a `reservaciones`
+    } catch (error) {
+        console.error("Error al cargar las reservaciones:", error);
+    }
+};
+
+// Llama a `cargarReservaciones` cuando el componente se monte
+onMounted(() => {
+    cargarReservaciones();
+});
+
+// Cálculo del mes con más reservaciones
 const mesMasReservaciones = computed(() => {
     const conteoPorMes = reservaciones.value.reduce((conteo, reserva) => {
-        const mes = new Date(reserva.fechaReserva).getMonth() + 1; // Obtener el mes (1-12)
+        const mes = new Date(reserva.fecha_llegada).getMonth() + 1; // Obtener el mes (1-12)
         conteo[mes] = (conteo[mes] || 0) + 1;
         return conteo;
     }, {});
@@ -17,7 +33,7 @@ const mesMasReservaciones = computed(() => {
 const mesSeleccionado = ref('');
 const reservacionesDelMes = computed(() => {
     return reservaciones.value.filter(reserva => {
-        const mes = new Date(reserva.fechaReserva).getMonth() + 1;
+        const mes = new Date(reserva.fecha_llegada).getMonth() + 1;
         return mes == mesSeleccionado.value;
     });
 });
@@ -38,16 +54,30 @@ const reservacionesDelMes = computed(() => {
             <table class="table-auto w-full">
                 <thead>
                     <tr>
-                        <th class="px-4 py-2">Fecha de Reserva</th>
-                        <th class="px-4 py-2">Nombre del Cliente</th>
+                        <th class="px-4 py-2">ID Reserva</th>
+                        <th class="px-4 py-2">Nombre</th>
+                        <th class="px-4 py-2">Apellido Paterno</th>
+                        <th class="px-4 py-2">Apellido Materno</th>
+                        <th class="px-4 py-2">RFC</th>
                         <th class="px-4 py-2">Tipo de Habitación</th>
+                        <th class="px-4 py-2">Número de Habitación</th>
+                        <th class="px-4 py-2">Estado</th>
+                        <th class="px-4 py-2">Fecha de Llegada</th>
+                        <th class="px-4 py-2">Fecha de Salida</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(reserva, index) in reservacionesDelMes" :key="index">
-                        <td class="border px-4 py-2">{{ reserva.fechaReserva }}</td>
-                        <td class="border px-4 py-2">{{ reserva.nombreCliente }}</td>
-                        <td class="border px-4 py-2">{{ reserva.tipoHabitacion }}</td>
+                        <td class="border px-4 py-2">{{ reserva.id_reserva }}</td>
+                        <td class="border px-4 py-2">{{ reserva.nombre }}</td>
+                        <td class="border px-4 py-2">{{ reserva.ap_pat }}</td>
+                        <td class="border px-4 py-2">{{ reserva.ap_mat }}</td>
+                        <td class="border px-4 py-2">{{ reserva.rfc }}</td>
+                        <td class="border px-4 py-2">{{ reserva.tipo_hab }}</td>
+                        <td class="border px-4 py-2">{{ reserva.numero_hab }}</td>
+                        <td class="border px-4 py-2">{{ reserva.estado }}</td>
+                        <td class="border px-4 py-2">{{ reserva.fecha_llegada }}</td>
+                        <td class="border px-4 py-2">{{ reserva.fecha_salida }}</td>
                     </tr>
                 </tbody>
             </table>

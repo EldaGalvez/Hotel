@@ -5,7 +5,7 @@ import { computed, onMounted, ref } from 'vue';
 const clientes = ref([]);
 
 const searchQuery = ref('');
-const apiUrl = 'http://localhost:8080/api/clientes'; // Ajustar URL de la API
+const apiUrl = 'http://localhost:8080/api/clientes'; // ---------- API
 
 const filteredClientes = computed(() => {
   if (!searchQuery.value) {

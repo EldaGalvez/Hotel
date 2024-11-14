@@ -1,14 +1,14 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
-// Definir la estructura de cancelación
+// estructura de cancelación
 const cancelacion = ref({
-    nombreCliente: '',
-    apellidoPaternoCliente: '',
-    apellidoMaternoCliente: '',
+    nombre_cliente: '',
+    ap_pat_cliente: '',
+    ap_mat_cliente: '',
     motivoCancelacion: '',
-    idReserva: '',
-    rfcCliente: ''
+    id_reserva: '',  
+    rfc: ''  
 });
 
 // Lista de cancelaciones (se llenará con los datos ingresados)
@@ -16,14 +16,14 @@ const cancelaciones = ref([]);
 
 // Función para registrar la cancelación
 const registerCancelacion = () => {
-    if (validarRFC(cancelacion.value.rfcCliente)) {
+    if (validarRFC(cancelacion.value.rfc)) {
         const nuevaCancelacion = {
-            idCancelacion: cancelaciones.value.length + 1,
-            fechaCancelacion: new Date().toLocaleDateString(),
-            horaCancelacion: new Date().toLocaleTimeString(),
-            nombreCliente: cancelacion.value.nombreCliente,
-            apellidoPaternoCliente: cancelacion.value.apellidoPaternoCliente,
-            apellidoMaternoCliente: cancelacion.value.apellidoMaternoCliente
+            id_cancelacion: cancelaciones.value.length + 1,
+            fecha_can: new Date().toLocaleDateString(),
+            hora_can: new Date().toLocaleTimeString(),
+            nombre_cliente: cancelacion.value.nombre_cliente,
+            ap_pat_cliente: cancelacion.value.ap_pat_cliente,
+            ap_mat_cliente: cancelacion.value.ap_mat_cliente
         };
         cancelaciones.value.push(nuevaCancelacion);
         alert('Registro de cancelación de reserva exitoso');
@@ -36,16 +36,16 @@ const registerCancelacion = () => {
 // Función para limpiar el formulario
 const limpiarFormulario = () => {
     cancelacion.value = {
-        nombreCliente: '',
-        apellidoPaternoCliente: '',
-        apellidoMaternoCliente: '',
+        nombre_cliente: '',
+        ap_pat_cliente: '',
+        ap_mat_cliente: '',
         motivoCancelacion: '',
-        idReserva: '',
-        rfcCliente: ''
+        id_reserva: '', 
+        rfc: ''  
     };
 };
 
-// Función para validar el RFC
+// validar el RFC
 const validarRFC = (rfc) => {
     const regexRFC = /^([A-ZÑ&]{3,4})?(\d{2})(\d{2})(\d{2})?[A-Z\d]{3}$/;
     return regexRFC.test(rfc);
@@ -53,9 +53,9 @@ const validarRFC = (rfc) => {
 
 // Función para buscar cliente por RFC y llenar el ID de reserva
 const buscarClientePorRFC = async () => {
-    if (cancelacion.value.rfcCliente.length === 13) {
+    if (cancelacion.value.rfc.length === 13) {
         try {
-            const response = await fetch(`http://localhost:8080/api/cliente/${cancelacion.value.rfcCliente}`);
+            const response = await fetch(`http://localhost:8080/api/cliente/${cancelacion.value.rfc}`); //---API----
             if (!response.ok) {
                 throw new Error('Error en la respuesta del servidor');
             }
@@ -63,10 +63,10 @@ const buscarClientePorRFC = async () => {
             const cliente = await response.json();
 
             if (cliente) {
-                cancelacion.value.idReserva = cliente.idReserva;
-                cancelacion.value.nombreCliente = cliente.nombre;
-                cancelacion.value.apellidoPaternoCliente = cliente.apellidoPaterno;
-                cancelacion.value.apellidoMaternoCliente = cliente.apellidoMaterno;
+                cancelacion.value.id_reserva = cliente.id_reserva; 
+                cancelacion.value.nombre_cliente = cliente.nombre;
+                cancelacion.value.ap_pat_cliente = cliente.apellidoPaterno;
+                cancelacion.value.ap_mat_cliente = cliente.apellidoMaterno;
             } else {
                 alert('Cliente no encontrado. Verifica el RFC.');
             }
@@ -77,8 +77,25 @@ const buscarClientePorRFC = async () => {
     }
 };
 
-// Observamos el cambio del RFC para hacer la búsqueda automáticamente
-watch(() => cancelacion.value.rfcCliente, buscarClientePorRFC);
+//  RFC automáticamente
+watch(() => cancelacion.value.rfc, buscarClientePorRFC);
+
+const fetchCancelaciones = async () => {
+    try {
+        const response = await fetch('api/cancelaciones'); // --------------- API ------------------
+        if (!response.ok) {
+            throw new Error('Error al obtener las cancelaciones');
+        }
+        cancelaciones.value = await response.json();
+    } catch (error) {
+        console.error('Error al obtener las cancelaciones:', error);
+    }
+};
+
+// Cargar las cancelaciones
+onMounted(() => {
+    fetchCancelaciones();
+});
 </script>
 
 <template>
@@ -88,20 +105,20 @@ watch(() => cancelacion.value.rfcCliente, buscarClientePorRFC);
         <div class="font-semibold text-xl text-center"><strong>Cancelación de Reservación</strong></div>
         <div class="flex flex-wrap gap-4 justify-center">
           <div class="w-full md:w-1/2 lg:w-1/3">
-            <label for="nombreCliente">Nombre del Cliente</label>
-            <InputText id="nombreCliente" type="text" v-model="cancelacion.nombreCliente" class="w-full" disabled />
+            <label for="nombre_cliente">Nombre del Cliente</label>
+            <InputText id="nombre_cliente" type="text" v-model="cancelacion.nombre_cliente" class="w-full" disabled />
           </div>
           <div class="w-full md:w-1/2 lg:w-1/3">
             <label for="motivoCancelacion">Motivo de la Cancelación</label>
             <InputText id="motivoCancelacion" type="text" v-model="cancelacion.motivoCancelacion" class="w-full" required />
           </div>
           <div class="w-full md:w-1/2 lg:w-1/3">
-            <label for="idReserva">ID de la Reserva</label>
-            <InputText id="idReserva" type="text" v-model="cancelacion.idReserva" class="w-full" readonly />
+            <label for="id_reserva">ID de la Reserva</label> 
+            <InputText id="id_reserva" type="text" v-model="cancelacion.id_reserva" class="w-full" readonly />
           </div>
           <div class="w-full md:w-1/2 lg:w-1/3">
-            <label for="rfcCliente">RFC del Cliente</label>
-            <InputText id="rfcCliente" type="text" v-model="cancelacion.rfcCliente" class="w-full" required />
+            <label for="rfc">RFC del Cliente</label> 
+            <InputText id="rfc" type="text" v-model="cancelacion.rfc" class="w-full" required />
           </div>
         </div>
         <Button label="Registrar" @click="registerCancelacion" class="mt-4 p-button-secondary register-button">
@@ -129,12 +146,12 @@ watch(() => cancelacion.value.rfcCliente, buscarClientePorRFC);
             <td colspan="6" class="text-center py-2">No hay cancelaciones registradas.</td>
           </tr>
           <tr v-for="(cancelacionItem, index) in cancelaciones" :key="index">
-            <td class="border px-4 py-2">{{ cancelacionItem.idCancelacion }}</td>
-            <td class="border px-4 py-2">{{ cancelacionItem.fechaCancelacion }}</td>
-            <td class="border px-4 py-2">{{ cancelacionItem.horaCancelacion }}</td>
-            <td class="border px-4 py-2">{{ cancelacionItem.nombreCliente }}</td>
-            <td class="border px-4 py-2">{{ cancelacionItem.apellidoPaternoCliente }}</td>
-            <td class="border px-4 py-2">{{ cancelacionItem.apellidoMaternoCliente }}</td>
+            <td class="border px-4 py-2">{{ cancelacionItem.id_cancelacion }}</td>
+            <td class="border px-4 py-2">{{ cancelacionItem.fecha_can }}</td>
+            <td class="border px-4 py-2">{{ cancelacionItem.hora_can }}</td>
+            <td class="border px-4 py-2">{{ cancelacionItem.nombre_cliente }}</td>
+            <td class="border px-4 py-2">{{ cancelacionItem.ap_pat_cliente }}</td>
+            <td class="border px-4 py-2">{{ cancelacionItem.ap_mat_cliente }}</td>
           </tr>
         </tbody>
       </table>
