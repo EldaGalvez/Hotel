@@ -1,5 +1,5 @@
 <template>
-    <div className="card">
+    <div class="card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
         <div class="font-semibold text-xl mb-4">PROYECTO HOTEL BUENA ESTANCIA</div>
         <p>Nombre de los integrantes:</p>
         <ul>

@@ -11,16 +11,22 @@ const cancelaciones = ref([]); // Lista vacía de cancelaciones
             <table class="table-auto w-full">
                 <thead>
                     <tr>
+                        <th class="px-4 py-2">ID Cancelación</th>
                         <th class="px-4 py-2">Fecha de Cancelación</th>
                         <th class="px-4 py-2">Hora de Cancelación</th>
                         <th class="px-4 py-2">Nombre del Cliente</th>
+                        <th class="px-4 py-2">Apellido Paterno</th>
+                        <th class="px-4 py-2">Apellido Materno</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="(cancelacion, index) in cancelaciones" :key="index">
+                        <td class="border px-4 py-2">{{ cancelacion.idCancelacion }}</td>
                         <td class="border px-4 py-2">{{ cancelacion.fechaCancelacion }}</td>
                         <td class="border px-4 py-2">{{ cancelacion.horaCancelacion }}</td>
                         <td class="border px-4 py-2">{{ cancelacion.nombreCliente }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.apellidoPaternoCliente }}</td>
+                        <td class="border px-4 py-2">{{ cancelacion.apellidoMaternoCliente }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -50,4 +56,5 @@ th {
     background-color: #f2f2f2;
     font-weight: bold;
 }
+
 </style>
