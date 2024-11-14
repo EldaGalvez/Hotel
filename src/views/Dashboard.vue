@@ -1,61 +1,68 @@
-<script setup>
-import { ref } from 'vue';
-
-// Lista de habitaciones
-const habitaciones = ref([
-    { nombre: 'Suite Presidencial', precio: 350.00, image: 'habitacion_presidencia.jpg' },
-    { nombre: 'Habitación Doble', precio: 150.00, image: 'habitacion_doble.jpg' },
-    { nombre: 'Habitación Sencilla', precio: 100.00, image: 'habitacion_sencilla.jpg' },
-    { nombre: 'Suite Luna de Miel', precio: 250.00, image: 'habitacion_luna.jpg' },
-    { nombre: 'Habitación Familiar', precio: 200.00, image: 'habitacion_familiar.jpg' },
-    { nombre: 'Habitación de Lujo', precio: 300.00, image: 'habitacion_lujo.jpg' }
-]);
-
-// Función para formatear el precio
-const formatCurrency = (value) => {
-    return value.toLocaleString('es-ES', { style: 'currency', currency: 'MXN' });
-};
-</script>
-
 <template>
-    <div class="grid grid-cols-12 gap-8">
-        <!-- Panel de Habitaciones -->
-        <div class="col-span-12">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Lista de Habitaciones</div>
-                <DataTable :value="habitaciones" :rows="3" :paginator="true" responsiveLayout="scroll">
-                    <Column style="width: 15%" header="Imagen">
-                        <template #body="slotProps">
-                            <img src="@/assets/habitacion_doble.jpg" alt="Habitacion doble" style="width: 150px; height: auto;" />
-                        </template>
-                    </Column>
-                    <Column field="nombre" header="Nombre" :sortable="true" style="width: 35%"></Column>
-                    <Column field="precio" header="Precio" :sortable="true" style="width: 35%">
-                        <template #body="slotProps">
-                            {{ formatCurrency(slotProps.data.precio) }}
-                        </template>
-                    </Column>
-                    <Column style="width: 15%" header="Acciones">
-                        <template #body>
-                            <Button icon="pi pi-info-circle" label="Más Información" class="p-button-text"></Button>
-                            <Button icon="pi pi-shopping-cart" label="Reservar" class="p-button-text"></Button>
-                        </template>
-                    </Column>
-                </DataTable>
-            </div>
+    <Fluid>
+      <div class="mt-8 card flex flex-col gap-4 w-full" style="background-color: rgba(255, 255, 255, 0.8);">
+        <div class="font-semibold text-xl">Estado de Habitaciones</div>
+        <div class="flex flex-col gap-2">
+          <input type="text" v-model="searchQuery" placeholder="Buscar habitación..." class="p-2 border border-gray-300 rounded"/>
         </div>
-    </div>
-</template>
-
-<style scoped>
-.card {
-    padding: 1rem;
-    background-color: var(--surface-card);
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.shadow {
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.15);
-}
-</style>
+        <table class="table-auto w-full">
+          <thead>
+            <tr>
+              <th class="px-4 py-2">ID</th>
+              <th class="px-4 py-2">Número</th>
+              <th class="px-4 py-2">Tipo</th>
+              <th class="px-4 py-2">Camas</th>
+              <th class="px-4 py-2">Precio</th>
+              <th class="px-4 py-2">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="habitacion in filteredHabitaciones" :key="habitacion.id">
+              <td class="border px-4 py-2">{{ habitacion.id }}</td>
+              <td class="border px-4 py-2">{{ habitacion.numero }}</td>
+              <td class="border px-4 py-2">{{ habitacion.tipo }}</td>
+              <td class="border px-4 py-2">{{ habitacion.cantidadDeCamas }}</td>
+              <td class="border px-4 py-2">{{ habitacion.precio }}</td>
+              <td class="border px-4 py-2">{{ habitacion.estado }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Fluid>
+  </template>
+  
+  <script setup>
+  import axios from 'axios';
+import { computed, ref } from 'vue';
+  
+  const habitaciones = ref([]);
+  const searchQuery = ref('');
+  
+  const filteredHabitaciones = computed(() => {
+    if (!searchQuery.value) return habitaciones.value;
+    return habitaciones.value.filter(habitacion =>
+      habitacion.numero.toString().includes(searchQuery.value) ||
+      habitacion.estado.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  });
+  
+  // Función para obtener los datos de la API
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('https://tu-api.com/habitaciones'); // ---------------  API -----------------------------
+      habitaciones.value = response.data.map(habitacionApi => ({
+        id: habitacionApi.id,
+        numero: habitacionApi.numero,
+        tipo: habitacionApi.tipo,
+        cantidadDeCamas: habitacionApi.camas,
+        precio: habitacionApi.precio,
+        estado: habitacionApi.estado
+      }));
+    } catch (error) {
+      console.error('Error al obtener datos de la API:', error);
+    }
+  };
+  
+  // Llama a la función fetchData al cargar el componente
+  fetchData();
+  </script>

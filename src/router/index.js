@@ -19,16 +19,6 @@ const router = createRouter({
                     component: () => import('@/views/pages/Empty.vue')
                 },
                 {
-                    path: '/pages/crud',
-                    name: 'crud',
-                    component: () => import('@/views/pages/Crud.vue')
-                },
-                {
-                    path: '/clientes/altac',
-                    name: 'altac',
-                    component: () => import('@/views/pages/clientes/Altac.vue')
-                },
-                {
                     path: '/clientes/listac',
                     name: 'listac',
                     component: () => import('@/views/pages/clientes/Listac.vue')
@@ -54,6 +44,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/estancia/Llegada.vue')
                 },
                 {
+                    path: '/estancia/salida',
+                    name: 'salida',
+                    component: () => import('@/views/pages/estancia/Salida.vue')
+                },
+                {
                     path: '/estancia/consumo',
                     name: 'consumo',
                     component: () => import('@/views/pages/estancia/Consumo.vue')
@@ -72,16 +67,6 @@ const router = createRouter({
                     path: '/facturacion/historial',
                     name: 'historial',
                     component: () => import('@/views/pages/facturacion/Historial.vue')
-                },
-                {
-                    path: '/habitaciones/liberacion',
-                    name: 'liberacion',
-                    component: () => import('@/views/pages/habitaciones/Liberacion.vue')
-                },
-                {
-                    path: '/habitaciones/habitacion',
-                    name: 'habitacion',
-                    component: () => import('@/views/pages/habitaciones/Habitacion.vue')
                 },
                 {
                     path: '/reportes/clientes',
@@ -115,32 +100,8 @@ const router = createRouter({
                     component: () => import('@/views/pages/reportes/Habitaciones.vue')
                 }
             ]
-        },
-        {
-            path: '/landing',
-            name: 'landing',
-            component: () => import('@/views/pages/Landing.vue')
-        },
-        {
-            path: '/pages/notfound',
-            name: 'notfound',
-            component: () => import('@/views/pages/NotFound.vue')
-        },
-        {
-            path: '/auth/login',
-            name: 'login',
-            component: () => import('@/views/pages/auth/Login.vue')
-        },
-        {
-            path: '/auth/access',
-            name: 'accessDenied',
-            component: () => import('@/views/pages/auth/Access.vue')
-        },
-        {
-            path: '/auth/error',
-            name: 'error',
-            component: () => import('@/views/pages/auth/Error.vue')
         }
+        
     ]
 });
 

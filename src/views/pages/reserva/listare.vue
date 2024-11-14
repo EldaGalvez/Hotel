@@ -5,7 +5,7 @@ import { computed, onMounted, ref } from 'vue';
 const reservas = ref([]);
 const searchQuery = ref('');
 const mensajeError = ref('');
-const apiUrl = 'http://localhost:8080/api/reservas'; //-------- API ---------
+const apiUrl = 'API'; //---------------------------- API ------------------------------
 const reservaEdit = ref({
     id: '',
     nombre: '',
@@ -13,26 +13,66 @@ const reservaEdit = ref({
     apellidoMaterno: '',
     tipoHabitacion: '',
     numeroHabitacion: '',
-    rfc: ''
+    estadoReserva: '',
+    fechaLlegada: '',
+    fechaSalida: ''
 });
-const editFormVisible = ref(false);
+const showModal = ref(false);
 
 const filteredReservas = computed(() => {
     if (!searchQuery.value) {
         return reservas.value.filter(reserva => reserva.estadoReserva === 'activa');
     }
     return reservas.value.filter(reserva =>
-        (reserva.estadoReserva === 'activa') &&
+        reserva.estadoReserva === 'activa' &&
         (
             reserva.id.toString().includes(searchQuery.value) ||
             reserva.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             reserva.apellidoPaterno.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             reserva.apellidoMaterno.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
             reserva.tipoHabitacion.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            reserva.numeroHabitacion.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            reserva.rfc.toLowerCase().includes(searchQuery.value.toLowerCase())
+            reserva.numeroHabitacion.toLowerCase().includes(searchQuery.value.toLowerCase())
         )
     );
+});
+
+const guardarReserva = async () => {
+    if (!mensajeError.value) {
+        try {
+            // Actualizar el objeto de la reserva editada en la lista
+            const index = reservas.value.findIndex(r => r.id === reservaEdit.value.id);
+            if (index !== -1) {
+                reservas.value[index] = { ...reservaEdit.value }; // Se actualiza la reserva
+                showModal.value = false; // Cerrar el modal después de guardar
+            }
+        } catch (error) {
+            console.error('Error al guardar la reserva:', error);
+        }
+    }
+};
+
+const modificarReserva = (index) => {
+    reservaEdit.value = { ...reservas.value[index] };
+    showModal.value = true;
+};
+
+const cancelarEdicion = () => {
+    reservaEdit.value = {
+        id: '',
+        nombre: '',
+        apellidoPaterno: '',
+        apellidoMaterno: '',
+        tipoHabitacion: '',
+        numeroHabitacion: '',
+        estadoReserva: '',
+        fechaLlegada: '',
+        fechaSalida: ''
+    };
+    showModal.value = false;
+};
+
+onMounted(() => {
+    fetchReservas();
 });
 
 const fetchReservas = async () => {
@@ -43,183 +83,110 @@ const fetchReservas = async () => {
         console.error('Error al obtener reservas:', error);
     }
 };
-
-const guardarReserva = async () => {
-    if (!mensajeError.value) {
-        try {
-            await axios.put(`${apiUrl}/${reservaEdit.value.id}`, reservaEdit.value);
-            const index = reservas.value.findIndex(r => r.id === reservaEdit.value.id);
-            if (index !== -1) {
-                reservas.value[index] = { ...reservaEdit.value };
-                editFormVisible.value = false;
-            }
-        } catch (error) {
-            console.error('Error al guardar la reserva:', error);
-        }
-    }
-};
-
-const modificarReserva = (index) => {
-    reservaEdit.value = { ...reservas.value[index] };
-    editFormVisible.value = true;
-};
-
-onMounted(() => {
-    fetchReservas();
-});
 </script>
 
 <template>
-    <Fluid>
-        <div class="mt-8 card flex flex-col gap-4 w-full">
-            <div class="font-semibold text-xl">Lista de Reservas Activas</div>
-            <div class="flex flex-col gap-2">
-                <input type="text" v-model="searchQuery" placeholder="Buscar reserva..." class="p-2 border border-gray-300 rounded"/>
-            </div>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">ID</th>
-                        <th class="px-4 py-2">Nombre</th>
-                        <th class="px-4 py-2">Apellido Paterno</th>
-                        <th class="px-4 py-2">Apellido Materno</th>
-                        <th class="px-4 py-2">RFC</th>
-                        <th class="px-4 py-2">Tipo de Habitacion</th>
-                        <th class="px-4 py-2">Numero de Habitacion</th>
-                        <th class="px-4 py-2">Estado de la Reserva</th>
-                        <th class="px-4 py-2">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-if="filteredReservas.length === 0">
-                        <td class="border px-4 py-2 text-center" colspan="9">No hay reservas activas disponibles.</td>
-                    </tr>
-                    <tr v-for="(reserva, index) in filteredReservas" :key="index">
-                        <td class="border px-4 py-2">{{ reserva.id }}</td>
-                        <td class="border px-4 py-2">{{ reserva.nombre }}</td>
-                        <td class="border px-4 py-2">{{ reserva.apellidoPaterno }}</td>
-                        <td class="border px-4 py-2">{{ reserva.apellidoMaterno }}</td>
-                        <td class="border px-4 py-2">{{ reserva.rfc }}</td>
-                        <td class="border px-4 py-2">{{ reserva.tipoHabitacion }}</td>
-                        <td class="border px-4 py-2">{{ reserva.numeroHabitacion }}</td>
-                        <td class="border px-4 py-2">{{ reserva.estadoReserva }}</td>
-                        <td class="border px-4 py-2">
-                            <Button icon="pi pi-pencil" @click="modificarReserva(index)" class="p-button-warning"></Button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+  <div class="mt-8 card flex flex-col gap-4 w-full" style="background-color: rgba(255, 255, 255, 0.8);">
+    <div class="font-semibold text-xl">Lista de Reservas Activas</div>
+    <div class="flex flex-col gap-2">
+      <input type="text" v-model="searchQuery" placeholder="Buscar reserva..." class="p-2 border border-gray-300 rounded"/>
+    </div>
+    <table class="table-auto w-full">
+      <thead>
+        <tr>
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Nombre</th>
+          <th class="px-4 py-2">Apellido Paterno</th>
+          <th class="px-4 py-2">Apellido Materno</th>
+          <th class="px-4 py-2">Tipo de Habitación</th>
+          <th class="px-4 py-2">Número de Habitación</th>
+          <th class="px-4 py-2">Estado</th>
+          <th class="px-4 py-2">Fecha Llegada</th>
+          <th class="px-4 py-2">Fecha Salida</th>
+          <th class="px-4 py-2">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-if="filteredReservas.length === 0">
+          <td class="border px-4 py-2 text-center" colspan="10">No hay reservas activas disponibles.</td>
+        </tr>
+        <tr v-for="(reserva, index) in filteredReservas" :key="index">
+          <td class="border px-4 py-2">{{ reserva.id }}</td>
+          <td class="border px-4 py-2">{{ reserva.nombre }}</td>
+          <td class="border px-4 py-2">{{ reserva.apellidoPaterno }}</td>
+          <td class="border px-4 py-2">{{ reserva.apellidoMaterno }}</td>
+          <td class="border px-4 py-2">{{ reserva.tipoHabitacion }}</td>
+          <td class="border px-4 py-2">{{ reserva.numeroHabitacion }}</td>
+          <td class="border px-4 py-2">{{ reserva.estadoReserva }}</td>
+          <td class="border px-4 py-2">{{ reserva.fechaLlegada }}</td>
+          <td class="border px-4 py-2">{{ reserva.fechaSalida }}</td>
+          <td class="border px-4 py-2 flex gap-2">
+            <button @click="modificarReserva(index)" class="p-button p-2" style="background-color: cornflowerblue; border-color: cornflowerblue;">Editar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
-            <!-- Formulario de Edición -->
-            <div v-if="editFormVisible" class="form-container">
-                <div class="form-card">
-                    <h3 class="text-center mb-4">Editar Reserva</h3>
-                    <form @submit.prevent="guardarReserva">
-                        <div class="mb-2">
-                            <label for="id" class="block">ID</label>
-                            <input type="text" v-model="reservaEdit.id" id="id" class="form-input" disabled />
-                        </div>
-                        <div class="mb-2">
-                            <label for="nombre" class="block">Nombre</label>
-                            <input type="text" v-model="reservaEdit.nombre" id="nombre" class="form-input" disabled />
-                        </div>
-                        <div class="mb-2">
-                            <label for="apellidoPaterno" class="block">Apellido Paterno</label>
-                            <input type="text" v-model="reservaEdit.apellidoPaterno" id="apellidoPaterno" class="form-input" disabled />
-                        </div>
-                        <div class="mb-2">
-                            <label for="apellidoMaterno" class="block">Apellido Materno</label>
-                            <input type="text" v-model="reservaEdit.apellidoMaterno" id="apellidoMaterno" class="form-input" disabled />
-                        </div>
-                        <div class="mb-2">
-                            <label for="rfc" class="block">RFC</label>
-                            <input type="text" v-model="reservaEdit.rfc" id="rfc" class="form-input" disabled />
-                        </div>
-                        <div class="mb-2">
-                            <label for="tipoHabitacion" class="block">Tipo de Habitación</label>
-                            <input type="text" v-model="reservaEdit.tipoHabitacion" id="tipoHabitacion" class="form-input" />
-                        </div>
-                        <div class="mb-2">
-                            <label for="numeroHabitacion" class="block">Número de Habitación</label>
-                            <input type="text" v-model="reservaEdit.numeroHabitacion" id="numeroHabitacion" class="form-input" />
-                        </div>
-                        <div class="text-center mt-4">
-                            <button type="submit" class="save-button">Guardar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div v-if="mensajeError" class="text-red-500">{{ mensajeError }}</div>
+  <!-- Modal -->
+  <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+    <div class="bg-white p-4 rounded-lg w-1/3">
+      <div class="font-semibold text-xl">Modificar Reserva</div>
+      <div class="flex flex-col gap-1 mt-4">
+        <label>ID</label>
+        <input type="text" v-model="reservaEdit.id" class="p-1 border border-gray-300 rounded" disabled/>
+        <label>Nombre</label>
+        <input type="text" v-model="reservaEdit.nombre" class="p-1 border border-gray-300 rounded"/>
+        <label>Apellido Paterno</label>
+        <input type="text" v-model="reservaEdit.apellidoPaterno" class="p-1 border border-gray-300 rounded"/>
+        <label>Apellido Materno</label>
+        <input type="text" v-model="reservaEdit.apellidoMaterno" class="p-1 border border-gray-300 rounded"/>
+        <label>Tipo de Habitación</label>
+        <input type="text" v-model="reservaEdit.tipoHabitacion" class="p-1 border border-gray-300 rounded"/>
+        <label>Número de Habitación</label>
+        <input type="text" v-model="reservaEdit.numeroHabitacion" class="p-1 border border-gray-300 rounded" disabled/>
+        <label>Estado</label>
+        <input type="text" v-model="reservaEdit.estadoReserva" class="p-1 border border-gray-300 rounded" disabled/>
+        <label>Fecha Llegada</label>
+        <input type="date" v-model="reservaEdit.fechaLlegada" class="p-1 border border-gray-300 rounded"/>
+        <label>Fecha Salida</label>
+        <input type="date" v-model="reservaEdit.fechaSalida" class="p-1 border border-gray-300 rounded"/>
+        <div class="flex justify-end gap-1 mt-2">
+          <button @click="guardarReserva" class="p-button p-2" style="background-color: cornflowerblue; border-color: cornflowerblue; font-weight: bold; color: white;">Guardar</button>
+          <button @click="cancelarEdicion" class="p-button p-2" style="background-color: red; border-color: red; font-weight: bold; color: white;">Cancelar</button>
         </div>
-    </Fluid>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
+/* Estilos */
 .card {
-    padding: 2em;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.8);
+  padding: 2em;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
 }
-
 table {
-    width: 100%;
-    border-collapse: collapse;
+  width: 100%;
+  border-collapse: collapse;
 }
-
 th, td {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
 }
-
 th {
-    background-color: #f2f2f2;
-    font-weight: bold;
+  background-color: #f2f2f2;
+  font-weight: bold;
 }
-
 button {
-    margin: 5px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-
-/* Estilos para el formulario */
-.form-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-}
-
-.form-card {
-    background-color: white;
-    padding: 2em;
-    border-radius: 10px;
-    width: 400px;
-}
-
-.form-input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.save-button {
-    background-color: cornflowerblue;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.save-button:hover {
-    background-color: deepskyblue;
+button:hover {
+  opacity: 0.8;
 }
 </style>

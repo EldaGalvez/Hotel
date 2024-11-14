@@ -1,6 +1,14 @@
 <template>
     <div className="card">
-        <div class="font-semibold text-xl mb-4">Empty Page</div>
-        <p>Use this page to start from scratch and place your custom content.</p>
+        <div class="font-semibold text-xl mb-4">PROYECTO HOTEL BUENA ESTANCIA</div>
+        <p>Nombre de los integrantes:</p>
+        <ul>
+            <li>Esmeralda Cruz Escobar</li>
+            <li>Elda Berenice Galvez Fierros</li>
+            <li>Diego Manuel Wong Garcia</li>
+        </ul>
+        <p>Semestre: 7 &nbsp;&nbsp;&nbsp; Grupo: D</p>
+        <p>Materia: Sistemas Operativos</p>
+        <p>Nombre del profesor: Vanessa Benavies Garcia</p>
     </div>
 </template>
