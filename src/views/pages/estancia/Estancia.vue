@@ -1,214 +1,166 @@
 <script setup>
+import axios from 'axios';
 import { computed, onMounted, ref } from 'vue';
 
 const estancias = ref([]);
+const serviciosDisponibles = ref(['Taxi', 'Lavandería', 'Room Service']);
+const searchQuery = ref('');
+const estanciaEdit = ref({
+  id: '',
+  nombreCliente: '',
+  numeroHabitacion: '',
+  fechaLlegada: '',
+  horaLlegada: '',
+  serviciosConsumidos: [],
+  diasEstancia: 0
+});
+const showModal = ref(false);
 
-const estancia = ref({
+// Cargar estancias desde la API
+const fetchEstancias = async () => {
+  try {
+    const response = await axios.get('API'); // ------------------------------------ API ---------------------------------------
+    estancias.value = response.data;
+  } catch (error) {
+    console.error('Error al obtener estancias:', error);
+  }
+};
+
+// Filtrar estancias según la búsqueda
+const filteredEstancias = computed(() => {
+  if (!searchQuery.value) {
+    return estancias.value;
+  }
+  return estancias.value.filter(estancia =>
+    estancia.id.toString().includes(searchQuery.value) ||
+    estancia.nombreCliente.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    estancia.numeroHabitacion.includes(searchQuery.value) ||
+    estancia.fechaLlegada.includes(searchQuery.value) ||
+    estancia.horaLlegada.includes(searchQuery.value) ||
+    estancia.diasEstancia.toString().includes(searchQuery.value)
+  );
+});
+
+// Cargar la estancia en el formulario de edición
+const modificarEstancia = (index) => {
+  estanciaEdit.value = { ...estancias.value[index] };
+
+  // Asegúrate de que los servicios ya consumidos estén marcados
+  estanciaEdit.value.serviciosConsumidos = [...estancias.value[index].serviciosConsumidos];
+
+  showModal.value = true;
+};
+
+// Guardar los cambios en la estancia
+const guardarEstancia = async () => {
+  try {
+    if (estanciaEdit.value.id) {
+      // Enviar los datos modificados a la API
+      await axios.put(`http://localhost:8080/api/estancias/${estanciaEdit.value.id}`, estanciaEdit.value); // ------------------------------------ API ---------------------------------------
+    } else {
+      // Crear una nueva estancia
+      await axios.post('API', estanciaEdit.value); // ------------------------------------ API ---------------------------------------
+    }
+    cancelarEdicion();
+  } catch (error) {
+    console.error('Error al guardar la estancia:', error);
+  }
+};
+
+// Cancelar la edición
+const cancelarEdicion = () => {
+  estanciaEdit.value = {
+    id: '',
     nombreCliente: '',
     numeroHabitacion: '',
     fechaLlegada: '',
     horaLlegada: '',
     serviciosConsumidos: [],
     diasEstancia: 0
-});
-
-const serviciosCatalogo = [
-    'Llamadas',
-    'Taxi',
-    'Comida',
-    'Servicio de Lavandería',
-    'Tours',
-    'Spa',
-    'Gimnasio'
-];
-
-const searchQuery = ref('');
-const selectedIndex = ref(null);
-
-const filteredEstancias = computed(() => {
-    if (!searchQuery.value) {
-        return estancias.value;
-    }
-    return estancias.value.filter(estancia => 
-        estancia.nombreCliente.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-        estancia.numeroHabitacion.includes(searchQuery.value)
-    );
-});
-
-const agregarServicio = (servicio) => {
-    if (!estancia.value.serviciosConsumidos.includes(servicio)) {
-        estancia.value.serviciosConsumidos.push(servicio);
-    }
-};
-
-const eliminarServicio = (servicio) => {
-    const index = estancia.value.serviciosConsumidos.indexOf(servicio);
-    if (index > -1) {
-        estancia.value.serviciosConsumidos.splice(index, 1);
-    }
-};
-
-const registrarEstancia = () => {
-    if (estancia.value.nombreCliente && estancia.value.numeroHabitacion) {
-        if (selectedIndex.value === null) {
-            estancias.value.push({ ...estancia.value });
-        } else {
-            estancias.value[selectedIndex.value] = { ...estancia.value };
-            selectedIndex.value = null;
-        }
-        limpiarFormulario();
-    } else {
-        alert("Por favor, completa los campos requeridos.");
-    }
-};
-
-const limpiarFormulario = () => {
-    estancia.value = {
-        nombreCliente: '',
-        numeroHabitacion: '',
-        fechaLlegada: '',
-        horaLlegada: '',
-        serviciosConsumidos: [],
-        diasEstancia: 0
-    };
-};
-
-const eliminarEstancia = (index) => {
-    estancias.value.splice(index, 1);
-};
-
-const modificarEstancia = (index) => {
-    estancia.value = { ...estancias.value[index] };
-    selectedIndex.value = index;
+  };
+  showModal.value = false;
 };
 
 onMounted(() => {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    estancia.value.horaLlegada = `${hours}:${minutes}`;
+  fetchEstancias();
 });
 </script>
 
 <template>
-    <Fluid>
-        <div class="mt-8 card flex flex-col gap-4 w-full" style="background-color: rgba(255, 255, 255, 0.8);">
-            <div class="font-semibold text-xl">Registro de Estancia</div>
-            <div class="flex flex-col gap-2">
-                <input type="text" v-model="searchQuery" placeholder="Buscar estancia..." class="p-2 border border-gray-300 rounded"/>
+  <Fluid>
+    <div class="mt-8 card flex flex-col gap-4 w-full" style="background-color: rgba(255, 255, 255, 0.8);">
+      <div class="font-semibold text-xl">Estancias</div>
+      <div class="flex flex-col gap-2">
+        <input type="text" v-model="searchQuery" placeholder="Buscar estancia..." class="p-2 border border-gray-300 rounded"/>
+      </div>
+      <table class="table-auto w-full">
+        <thead>
+          <tr>
+            <th class="px-4 py-2">ID Estancia</th>
+            <th class="px-4 py-2">Cliente</th>
+            <th class="px-4 py-2">Número de Habitación</th>
+            <th class="px-4 py-2">Fecha Llegada</th>
+            <th class="px-4 py-2">Hora Llegada</th>
+            <th class="px-4 py-2">Servicios Consumidos</th>
+            <th class="px-4 py-2">Días Estancia</th>
+            <th class="px-4 py-2">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="filteredEstancias.length === 0">
+            <td class="border px-4 py-2 text-center" colspan="8">No hay estancias disponibles.</td>
+          </tr>
+          <tr v-for="(estancia, index) in filteredEstancias" :key="estancia.id">
+            <td class="border px-4 py-2">{{ estancia.id }}</td>
+            <td class="border px-4 py-2">{{ estancia.nombreCliente }}</td>
+            <td class="border px-4 py-2">{{ estancia.numeroHabitacion }}</td>
+            <td class="border px-4 py-2">{{ estancia.fechaLlegada }}</td>
+            <td class="border px-4 py-2">{{ estancia.horaLlegada }}</td>
+            <td class="border px-4 py-2">{{ estancia.serviciosConsumidos.join(', ') }}</td>
+            <td class="border px-4 py-2">{{ estancia.diasEstancia }}</td>
+            <td class="border px-4 py-2 flex gap-2">
+              <Button icon="pi pi-pencil" @click="modificarEstancia(index)" class="p-button-warning"></Button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal para editar la estancia -->
+    <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75">
+      <div class="bg-white p-4 rounded-lg w-1/3">
+        <div class="font-semibold text-xl">Modificar Estancia</div>
+        <div class="flex flex-col gap-1 mt-4">
+          <label>ID Estancia</label>
+          <input type="text" v-model="estanciaEdit.id" class="p-1 border border-gray-300 rounded" readonly/>
+          <label>Cliente</label>
+          <input type="text" v-model="estanciaEdit.nombreCliente" class="p-1 border border-gray-300 rounded" readonly/>
+          <label>Número de Habitación</label>
+          <input type="text" v-model="estanciaEdit.numeroHabitacion" class="p-1 border border-gray-300 rounded" readonly/>
+          <label>Fecha de Llegada</label>
+          <input type="date" v-model="estanciaEdit.fechaLlegada" class="p-1 border border-gray-300 rounded"/>
+          <label>Hora de Llegada</label>
+          <input type="time" v-model="estanciaEdit.horaLlegada" class="p-1 border border-gray-300 rounded"/>
+          <label>Servicios Consumidos</label>
+          <div class="flex flex-col">
+            <div v-for="(servicio, index) in serviciosDisponibles" :key="index">
+              <input 
+                type="checkbox" 
+                :id="servicio" 
+                :value="servicio"
+                v-model="estanciaEdit.serviciosConsumidos"
+              />
+              <label :for="servicio">{{ servicio }}</label>
             </div>
-            <table class="table-auto w-full">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2">Nombre del Cliente</th>
-                        <th class="px-4 py-2">Número de Habitación</th>
-                        <th class="px-4 py-2">Fecha de Llegada</th>
-                        <th class="px-4 py-2">Hora de Llegada</th>
-                        <th class="px-4 py-2">Días de Estancia</th>
-                        <th class="px-4 py-2">Servicios Consumidos</th>
-                        <th class="px-4 py-2">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(estancia, index) in filteredEstancias" :key="index">
-                        <td class="border px-4 py-2">{{ estancia.nombreCliente }}</td>
-                        <td class="border px-4 py-2">{{ estancia.numeroHabitacion }}</td>
-                        <td class="border px-4 py-2">{{ estancia.fechaLlegada }}</td>
-                        <td class="border px-4 py-2">{{ estancia.horaLlegada }}</td>
-                        <td class="border px-4 py-2">{{ estancia.diasEstancia }}</td>
-                        <td class="border px-4 py-2">
-                            <ul>
-                                <li v-for="(servicio, sIndex) in estancia.serviciosConsumidos" :key="sIndex">{{ servicio }}</li>
-                            </ul>
-                        </td>
-                        <td class="border px-4 py-2 flex gap-2">
-                            <Button icon="pi pi-pencil" @click="modificarEstancia(index)" class="p-button-warning"></Button>
-                            <Button icon="pi pi-trash" @click="eliminarEstancia(index)" class="p-button-danger"></Button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+          </div>
+          <label>Días de Estancia</label>
+          <input type="number" v-model="estanciaEdit.diasEstancia" class="p-1 border border-gray-300 rounded"/>
+          <div class="flex justify-end gap-1 mt-2">
+            <Button label="Guardar" @click="guardarEstancia" class="p-button" :style="{ backgroundColor: 'cornflowerblue', borderColor: 'cornflowerblue' }"></Button>
+            <Button label="Cancelar" @click="cancelarEdicion" class="p-button" :style="{ backgroundColor: 'red', borderColor: 'red' }"></Button>
+          </div>
         </div>
-        
-        <div class="card flex flex-col gap-4 w-full mt-8" style="background-color: rgba(255, 255, 255, 0.8);">
-            <div class="font-semibold text-xl text-center"><strong>Registrar Estancia</strong></div>
-            <div class="flex flex-wrap gap-4">
-                <div class="w-full md:w-1/2 lg:w-1/3">
-                    <label for="nombreCliente">Nombre del Cliente</label>
-                    <InputText id="nombreCliente" type="text" v-model="estancia.nombreCliente" class="w-full"/>
-                </div>
-                <div class="w-full md:w-1/2 lg:w-1/3">
-                    <label for="numeroHabitacion">Número de Habitación</label>
-                    <InputText id="numeroHabitacion" type="text" v-model="estancia.numeroHabitacion" class="w-full"/>
-                </div>
-                <div class="w-full md:w-1/2 lg:w-1/3">
-                    <label for="fechaLlegada">Fecha de Llegada</label>
-                    <InputText id="fechaLlegada" type="date" v-model="estancia.fechaLlegada" class="w-full"/>
-                </div>
-                <div class="w-full md:w-1/2 lg:w-1/3">
-                    <label for="horaLlegada">Hora de Llegada</label>
-                    <InputText id="horaLlegada" type="time" v-model="estancia.horaLlegada" class="w-full"/>
-                </div>
-                <div class="w-full md:w-1/2 lg:w-1/3">
-                    <label for="diasEstancia">Días de Estancia</label>
-                    <InputText id="diasEstancia" type="number" v-model="estancia.diasEstancia" class="w-full"/>
-                </div>
-                <div class="w-full">
-                    <label for="serviciosConsumidos">Servicios Consumidos</label>
-                    <div v-for="servicio in serviciosCatalogo" :key="servicio">
-                        <input type="checkbox" :id="servicio" :value="servicio" v-model="estancia.serviciosConsumidos">
-                        <label :for="servicio">{{ servicio }}</label>
-                    </div>
-                </div>
-            </div>
-            <Button label="Registrar Estancia" @click="registrarEstancia" class="mt-4 register-button">
-                {{ selectedIndex.value === null ? 'Registrar Estancia' : 'Modificar Estancia' }}
-            </Button>
-        </div>
-    </Fluid>
+      </div>
+    </div>
+  </Fluid>
 </template>
-
-<style scoped>
-.card {
-    padding: 2em;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.8);
-}
-
-label, input {
-    margin: 0.5em 0;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-}
-
-th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-}
-
-button {
-    margin: 5px;
-}
-
-.register-button {
-    background-color: #808080;
-    border-radius: 15px;
-    font-weight: bold;
-    width: 50%;
-    font-size: 1.2em;
-    height: 50px;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    margin: 1em auto 0;
-}
-</style>
