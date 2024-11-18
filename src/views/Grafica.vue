@@ -12,7 +12,7 @@ onMounted(async () => {
 
 async function fetchDataFromAPI() {
     try {
-        const response = await axios.get('API'); // Reemplaza con tu URL de la API
+        const response = await axios.get('API'); //------------------API---------------------------
         const data = response.data;
 
         const occupationCount = {};
