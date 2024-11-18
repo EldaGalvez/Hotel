@@ -19,6 +19,11 @@ const router = createRouter({
                     component: () => import('@/views/pages/Empty.vue')
                 },
                 {
+                    path: '/pages/grafica',
+                    name: 'grafica',
+                    component: () => import('@/views/Grafica.vue')
+                },
+                {
                     path: '/clientes/listac',
                     name: 'listac',
                     component: () => import('@/views/pages/clientes/Listac.vue')

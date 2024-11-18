@@ -131,6 +131,11 @@ const model = ref([
                 label: 'Mas informacion',
                 icon: 'pi pi-fw pi-circle-off',
                 to: '/pages/empty'
+            },
+            {
+                label: 'Graficas',
+                icon: 'pi pi-fw pi-chart-bar',
+                to: '/pages/grafica'
             }
         ]
     }
